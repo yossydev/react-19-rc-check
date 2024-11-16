@@ -1,90 +1,47 @@
-import { Suspense, useEffect, useState } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
-import "./App.css";
+import React, { Suspense } from "react";
+
+// 非同期コンポーネントA: 1秒後に開始、さらに2秒後に解決
+const LazyComponent1 = React.lazy(
+	() =>
+		new Promise((resolve) => {
+			setTimeout(() => {
+				console.log("LazyComponent1 開始");
+				setTimeout(() => {
+					console.log("LazyComponent1 完了");
+					resolve({ default: () => <div>コンポーネントA</div> });
+				}, 2000);
+			}, 1000); // 1秒後に開始
+		}),
+);
+
+// 非同期コンポーネントB: 4秒後に開始、さらに2秒後に解決
+const LazyComponent2 = React.lazy(
+	() =>
+		new Promise((resolve) => {
+			setTimeout(() => {
+				console.log("LazyComponent2 開始");
+				setTimeout(() => {
+					console.log("LazyComponent2 完了");
+					resolve({ default: () => <div>コンポーネントB</div> });
+				}, 2000);
+			}, 4000); // 2秒後に開始
+		}),
+);
 
 function App() {
-	const [count, setCount] = useState(0);
-	const fetcher = async () => {
-		const res = await fetch("https://pokeapi.co/api/v2/pokemon");
-		return await res.json();
-	};
-
-	const state = useData("key2", fetcher);
-
 	return (
-		<>
-			<div>
-				<a href="https://vite.dev" target="_blank">
-					<img src={viteLogo} className="logo" alt="Vite logo" />
-				</a>
-				<a href="https://react.dev" target="_blank">
-					<img src={reactLogo} className="logo react" alt="React logo" />
-				</a>
-			</div>
-			<h1>Vite + React</h1>
-			<div className="card">
-				{state.results.map((v) => {
-					return v.name;
-				})}
-			</div>
-			<Suspense fallback={<div>loading...</div>}>
-				<Component />
+		<div>
+			<h1>React 18 vs React 19: Suspense Fallback Timing</h1>
+
+			{/* Suspense Boundary */}
+			<Suspense fallback={<div>ローディング中...</div>}>
+				<div style={{ display: "flex", gap: "20px" }}>
+					<LazyComponent1 />
+					<LazyComponent2 />
+				</div>
 			</Suspense>
-			<p className="read-the-docs">
-				Click on the Vite and React logos to learn more
-			</p>
-		</>
+		</div>
 	);
 }
 
 export default App;
-
-const Component = () => {
-	const fetcher = async () => {
-		const res = await fetch("https://pokeapi.co/api/v2/pokemon/ditto");
-		return await res.json();
-	};
-
-	const state = useData("key1", fetcher);
-
-	return (
-		<>
-			{state?.name}
-			<Component2 />
-			<Component3 />
-		</>
-	);
-};
-
-const Component2 = () => {
-	const fetcher = async () => {
-		const res = await fetch("https://pokeapi.co/api/v2/pokemon/ditto");
-		return await res.json();
-	};
-
-	const state = useData("key3", fetcher);
-
-	return <>{state?.name}</>;
-};
-
-const Component3 = () => {
-	const fetcher = async () => {
-		const res = await fetch("https://pokeapi.co/api/v2/pokemon/ditto");
-		return await res.json();
-	};
-
-	const state = useData("key4", fetcher);
-
-	return <>{state?.name}</>;
-};
-
-const dataMap: Map<string, unknown> = new Map();
-
-export function useData<T>(cacheKey: string, fetch: () => Promise<T>): T {
-	const cachedData = dataMap.get(cacheKey) as T | undefined;
-	if (cachedData === undefined) {
-		throw fetch().then((d) => dataMap.set(cacheKey, d));
-	}
-	return cachedData;
-}
