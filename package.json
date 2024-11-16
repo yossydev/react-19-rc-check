@@ -1,5 +1,5 @@
 {
-  "name": "my-turborepo",
+  "name": "react-rc-checl",
   "private": true,
   "scripts": {
     "build": "turbo build",
